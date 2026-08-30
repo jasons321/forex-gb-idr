@@ -1,0 +1,7 @@
+ticker_pair: "GBPIDR=X"
+lookback_days: 180
+percentile_favorable: 0.25
+percentile_unfavorable: 0.75
+ml_horizon_days: 10
+ml_prob_threshold_up: 0.55
+ml_prob_threshold_down: 0.45
