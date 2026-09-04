@@ -22,6 +22,8 @@ def get_data_incremental(ticker="GBPIDR=X", cache_path=CACHE_PATH):
             cached.index = cached.index.tz_localize(None)
             new_data.index = new_data.index.tz_localize(None)
 
+            new_data = new_data.drop(columns=["Volume"], errors="ignore")
+
             combined = pd.concat([cached, new_data])
             combined = combined[~combined.index.duplicated(keep="last")]
             combined.sort_index(inplace=True)
@@ -35,6 +37,7 @@ def get_data_incremental(ticker="GBPIDR=X", cache_path=CACHE_PATH):
     else:
         print("No cache found, fetching full history...")
         df = yf.download(ticker, start="2015-01-01")
+        df = df.drop(columns=["Volume"], errors="ignore")
         
         # Handle MultiIndex for initial download
         if isinstance(df.columns, pd.MultiIndex):
