@@ -92,6 +92,75 @@ def build_comparison_table(df, period_days=90, n_trials=5000, random_state=42, c
     return results
  
  
+# ---------- Walk-forward evaluation ----------
+
+def walk_forward_folds(df, n_folds=5):
+    """Split df into n_folds sequential, non-overlapping chronological folds
+    (no shuffling) -- e.g. successive multi-year blocks rather than random
+    samples, so each fold lines up with a real stretch of market history."""
+    n = len(df)
+    fold_size = n // n_folds
+    folds = []
+    for i in range(n_folds):
+        start = i * fold_size
+        end = start + fold_size if i < n_folds - 1 else n  # last fold takes the remainder
+        folds.append(df.iloc[start:end])
+    return folds
+
+
+def walk_forward_evaluate(df, n_folds=5, period_days=90, n_trials=5000,
+                           random_state=42, col="Close"):
+    """Runs build_comparison_table independently on each of n_folds sequential
+    time windows instead of once over the whole history, and reports the
+    spread of each strategy's edge over the random baseline across folds.
+
+    This is the rule-based-signal counterpart to the ML walk-forward in
+    notebook 04: same idea (many sequential windows, look at the spread
+    instead of trusting one pooled number), applied here to Strategies A/B/C.
+    There's no train/test purge gap like the ML version needs -- these
+    strategies don't fit anything to the data, they just read the rolling
+    percentile signal, which is already causal within each fold.
+
+    A strategy whose edge only looks good pooled across every year (mixing
+    GBP/IDR's balanced and trending stretches together) but is inconsistent,
+    or flips sign, fold-to-fold isn't something to trust.
+
+    Returns (fold_results, summary):
+      fold_results -- one row per (fold, strategy), with the fold's date
+                       range, avg rate paid, and edge vs. that fold's own
+                       random baseline.
+      summary       -- one row per strategy: mean/std edge across folds and
+                        how many of the n_folds it beat the random baseline in.
+    """
+    folds = walk_forward_folds(df, n_folds=n_folds)
+
+    rows = []
+    for fold_num, fold_df in enumerate(folds, start=1):
+        table = build_comparison_table(
+            fold_df, period_days=period_days, n_trials=n_trials,
+            random_state=random_state, col=col,
+        )
+        table = table[table["Strategy"] != "Random day (avg of trials)"].copy()
+        table["Fold"] = fold_num
+        table["Start"] = fold_df.index.min()
+        table["End"] = fold_df.index.max()
+        table["Edge vs Random (%)"] = -table["vs Random (%)"]  # positive = beat random
+        rows.append(table)
+
+    fold_results = pd.concat(rows, ignore_index=True)
+    fold_results = fold_results[
+        ["Fold", "Start", "End", "Strategy", "Avg Rate Paid", "Edge vs Random (%)"]
+    ]
+
+    summary = fold_results.groupby("Strategy")["Edge vs Random (%)"].agg(
+        mean_edge="mean", std_edge="std",
+        folds_beating_random=lambda s: (s > 0).sum(),
+    ).reset_index()
+    summary["n_folds"] = n_folds
+
+    return fold_results, summary
+
+
 # ---------- Validation ----------
  
 def check_lookahead_bias(df, percentile_col="Percentile_Rank", value_col="Close",
