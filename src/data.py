@@ -2,7 +2,10 @@ import os
 import pandas as pd
 import yfinance as yf
 
-CACHE_PATH = "data/raw/gbpidr.csv"
+# Anchored to the repo root so the cache lands in one place regardless of
+# whether you run from the project root or from notebooks/.
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CACHE_PATH = os.path.join(PROJECT_ROOT, "data", "raw", "gbpidr.csv")
 
 def get_data_incremental(ticker="GBPIDR=X", cache_path=CACHE_PATH):
     if os.path.exists(cache_path):

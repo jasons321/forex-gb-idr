@@ -2,7 +2,6 @@ pandas
 numpy
 yfinance
 scikit-learn
-xgboost
 matplotlib
 jupyter
 pyyaml
