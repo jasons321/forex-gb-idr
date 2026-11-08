@@ -1,1 +1,13 @@
-ticker_pair: "GBPIDR=X"
+# name -> Yahoo ticker. Saved to data/raw/yahoo/<name>.csv
+yahoo:
+  gbpidr: "GBPIDR=X"
+  gbpusd: "GBPUSD=X"
+  usdidr: "IDR=X"
+  dxy: "DX-Y.NYB"
+  brent: "BZ=F"
+  wti: "CL=F"
+  gold: "GC=F"
+  copper: "HG=F"
+  palm_oil: "CPO=F"
+  jkse: "^JKSE"
+  ftse: "^FTSE"
