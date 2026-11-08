@@ -11,3 +11,7 @@ yahoo:
   palm_oil: "CPO=F"
   jkse: "^JKSE"
   ftse: "^FTSE"
+
+# name -> Bank of England database series code. Saved to data/raw/boe/<name>.csv
+boe:
+  bank_rate: "IUDBEDR"   # official Bank Rate, daily
